@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event Management Portal</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    background:#f4f6f9;
+    padding:20px;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+}
+
+h1{
+    text-align:center;
+    margin-bottom:20px;
+    color:#333;
+}
+
+.dashboard{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:15px;
+    margin-bottom:20px;
+}
+
+.card{
+    background:#fff;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+    text-align:center;
+}
+
+.card h2{
+    color:#2563eb;
+}
+
+.form{
+    background:#fff;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+    margin-bottom:20px;
+}
+
+.form input,
+.form textarea,
+.form select{
+    width:100%;
+    padding:12px;
+    margin:8px 0;
+    border:1px solid #ccc;
+    border-radius:8px;
+}
+
+button{
+    padding:12px 18px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    color:white;
+}
+
+.add-btn{
+    background:#2563eb;
+}
+
+.edit-btn{
+    background:#f59e0b;
+}
+
+.delete-btn{
+    background:#dc2626;
+}
+
+.register-btn{
+    background:#16a34a;
+}
+
+.events{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+    gap:15px;
+}
+
+.event-card{
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+
+.event-card h3{
+    margin-bottom:10px;
+}
+
+.badge{
+    display:inline-block;
+    padding:5px 10px;
+    background:#2563eb;
+    color:white;
+    border-radius:20px;
+    font-size:12px;
+    margin-top:5px;
+}
+
+.actions{
+    display:flex;
+    gap:10px;
+    margin-top:15px;
+    flex-wrap:wrap;
+}
+
+@media(max-width:768px){
+    .actions{
+        flex-direction:column;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>🎉 Event Management Portal</h1>
+
+    <div class="dashboard">
+
+        <div class="card">
+            <h2 id="totalEvents">0</h2>
+            <p>Total Events</p>
+        </div>
+
+        <div class="card">
+            <h2 id="upcomingEvents">0</h2>
+            <p>Upcoming Events</p>
+        </div>
+
+        <div class="card">
+            <h2 id="registrations">0</h2>
+            <p>Total Registrations</p>
+        </div>
+
+    </div>
+
+    <div class="form">
+
+        <input type="text" id="eventName" placeholder="Event Name">
+
+        <textarea id="eventDesc" placeholder="Event Description"></textarea>
+
+        <input type="date" id="eventDate">
+
+        <select id="eventType">
+            <option>Workshop</option>
+            <option>Seminar</option>
+            <option>Hackathon</option>
+            <option>Quiz</option>
+            <option>Cultural Fest</option>
+        </select>
+
+        <button class="add-btn" onclick="addEvent()">
+            Add Event
+        </button>
+
+    </div>
+
+    <div class="events" id="eventList"></div>
+
+</div>
+
+<script>
+
+let events =
+JSON.parse(localStorage.getItem("events")) || [];
+
+function saveData(){
+    localStorage.setItem(
+        "events",
+        JSON.stringify(events)
+    );
+}
+
+function addEvent(){
+
+    let name =
+    document.getElementById("eventName").value;
+
+    let desc =
+    document.getElementById("eventDesc").value;
+
+    let date =
+    document.getElementById("eventDate").value;
+
+    let type =
+    document.getElementById("eventType").value;
+
+    if(name==="" || date===""){
+        alert("Please fill all required fields");
+        return;
+    }
+
+    events.push({
+        id:Date.now(),
+        name,
+        desc,
+        date,
+        type,
+        registrations:0
+    });
+
+    saveData();
+    displayEvents();
+
+    document.getElementById("eventName").value="";
+    document.getElementById("eventDesc").value="";
+    document.getElementById("eventDate").value="";
+}
+
+function deleteEvent(id){
+
+    events =
+    events.filter(event => event.id !== id);
+
+    saveData();
+    displayEvents();
+}
+
+function registerEvent(id){
+
+    events = events.map(event=>{
+
+        if(event.id===id){
+            event.registrations++;
+        }
+
+        return event;
+    });
+
+    saveData();
+    displayEvents();
+}
+
+function updateDashboard(){
+
+    document.getElementById("totalEvents").innerText =
+    events.length;
+
+    document.getElementById("upcomingEvents").innerText =
+    events.length;
+
+    let totalRegs = events.reduce(
+        (sum,event)=>sum+event.registrations,0
+    );
+
+    document.getElementById("registrations").innerText =
+    totalRegs;
+}
+
+function displayEvents(){
+
+    const list =
+    document.getElementById("eventList");
+
+    list.innerHTML="";
+
+    events.forEach(event=>{
+
+        list.innerHTML += `
+        <div class="event-card">
+
+            <h3>${event.name}</h3>
+
+            <p>${event.desc}</p>
+
+            <br>
+
+            <span class="badge">${event.type}</span>
+
+            <p style="margin-top:10px;">
+                📅 ${event.date}
+            </p>
+
+            <p>
+                👥 Registrations:
+                ${event.registrations}
+            </p>
+
+            <div class="actions">
+
+                <button
+                class="register-btn"
+                onclick="registerEvent(${event.id})">
+                Register
+                </button>
+
+                <button
+                class="delete-btn"
+                onclick="deleteEvent(${event.id})">
+                Delete
+                </button>
+
+            </div>
+
+        </div>
+        `;
+    });
+
+    updateDashboard();
+}
+
+displayEvents();
+
+</script>
+
+</body>
+</html>
